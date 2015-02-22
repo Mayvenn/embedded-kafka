@@ -4,6 +4,7 @@
   
                              
                              
+                             
   :url "https://github.com/Mayvenn/embedded-kafka"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
