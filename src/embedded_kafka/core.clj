@@ -12,7 +12,9 @@
     [kafka.utils Time]
     [java.util Properties])
   (:require [clojure.java.io :refer [file]]
-            [clj-kafka.core :refer [as-properties]]))
+            [clj-kafka.core :refer [as-properties]]
+            [clj-kafka.producer :refer [producer]]
+            [clj-kafka.consumer.zk :refer [consumer shutdown]]))
 
 (defn tmp-dir
   [& parts]
@@ -23,39 +25,32 @@
                    (nanoseconds [] (System/nanoTime))
                    (sleep [ms] (Thread/sleep ms))))
 
-;; enable.zookeeper doesn't seem to be used- check it actually has an effect
+(def ^:dynamic kafka-config
+  {"broker.id"                   "0"
+   "port"                        "9999"
+   "host.name"                   "localhost"
+   "metadata.broker.list"        "localhost:9999"
+   "zookeeper.connect"           "127.0.0.1:2182"
+   "zookeeper-port"              "2182"
+   "log.flush.interval.messages" "1"
+   "auto.create.topics.enable"   "true"
+   "group.id"                    "consumer"
+   "auto.offset.reset"           "smallest"
+   "serializer.class"            "kafka.serializer.StringEncoder",
+   "auto.commit.enable"          "false"
+   "log.dir"                     (.getAbsolutePath (file (tmp-dir "kafka-log")))})
+
 (defn create-broker
-  [{:keys [kafka-port zookeeper-port]}]
-  (let [base-config {"broker.id"                   "0"
-                     "port"                        "9999"
-                     "host.name"                   "localhost"
-                     "zookeeper.connect"           (str "127.0.0.1:" zookeeper-port)
-                     "enable.zookeeper"            "true"
-                     "log.flush.interval.messages" "1"
-                     "auto.create.topics.enable"   "true"
-                     "log.dir"                     (.getAbsolutePath (file (tmp-dir "kafka-log")))}]
-    (KafkaServer. (KafkaConfig. (as-properties (assoc base-config "port" (str kafka-port))))
-                  system-time)))
+  []
+  (KafkaServer. (KafkaConfig. (as-properties kafka-config))
+                system-time))
 
 (defn create-zookeeper
-  [{:keys [zookeeper-port]}]
+  []
   (let [tick-time 500
         zk (ZooKeeperServer. (file (tmp-dir "zookeeper-snapshot")) (file (tmp-dir "zookeeper-log")) tick-time)]
-    (doto (NIOServerCnxn$Factory. (InetSocketAddress. "127.0.0.1" zookeeper-port))
+    (doto (NIOServerCnxn$Factory. (InetSocketAddress. "127.0.0.1" (read-string (kafka-config "zookeeper-port"))))
       (.startup zk))))
-
-(defn wait-until-initialised
-  [^KafkaServer kafka-server topic]
-  (let [apis (.apis kafka-server)
-        cache (.metadataCache apis)]
-    (while (not (.containsTopicAndPartition cache topic 0))
-      (Thread/sleep 500))))
-
-(defn create-topic
-  [kafka-server zk-client topic & {:keys [partitions replicas]
-                                   :or   {partitions 1 replicas 1}}]
-  (AdminUtils/createTopic zk-client topic partitions replicas (Properties.))
-  (wait-until-initialised kafka-server topic))
 
 (def string-serializer (proxy [ZkSerializer] []
                          (serialize [data] (.getBytes data "UTF-8"))
@@ -64,17 +59,19 @@
 
 (defmacro with-test-broker
   "Creates an in-process broker that can be used to test against"
-  [config & body]
+  [producer-name consumer-name & body]
   `(do (FileUtils/deleteDirectory (file (tmp-dir)))
-       (let [zk# (create-zookeeper ~config)
-             kafka# (create-broker ~config)
-             topic# (:topic ~config)]
+       (let [zk# (create-zookeeper)
+             kafka# (create-broker)
+             ~producer-name (producer kafka-config)
+             ~consumer-name (consumer kafka-config)]
          (try
            (.startup kafka#)
-           (let [zk-client# (ZkClient. (str "127.0.0.1:" (:zookeeper-port ~config)) 500 500 string-serializer)]
-             (create-topic kafka# zk-client# topic#)
+           (let [zk-client# (ZkClient. (kafka-config "zookeeper.connect") 500 500 string-serializer)]
              ~@body)
-           (finally (do (.shutdown kafka#)
+           (finally (do (shutdown ~consumer-name)
+                        (.close ~producer-name)
+                        (.shutdown kafka#)
                         (.awaitShutdown kafka#)
                         (.shutdown zk#)
                         (FileUtils/deleteDirectory (file (tmp-dir)))))))))
