@@ -1,4 +1,4 @@
-(defproject embedded-kafka "0.1.0"
+(defproject embedded-kafka "0.2.0-SNAPSHOT"
   :description "Helpers to run an embedded Kafka Broker"
   :plugins [[s3-wagon-private "1.1.2"]]
   
