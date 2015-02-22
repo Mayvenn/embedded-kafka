@@ -2,15 +2,10 @@
 
 (ns embedded-kafka.core
   (:import
-    [kafka.admin AdminUtils]
-    [kafka.server KafkaConfig KafkaServer]
+    [kafka.server KafkaConfig KafkaServerStartable]
     [java.net InetSocketAddress]
     [org.apache.zookeeper.server ZooKeeperServer NIOServerCnxn$Factory]
-    [org.apache.commons.io FileUtils]
-    [org.I0Itec.zkclient ZkClient]
-    [org.I0Itec.zkclient.serialize ZkSerializer]
-    [kafka.utils Time]
-    [java.util Properties])
+    [org.apache.commons.io FileUtils])
   (:require [clojure.java.io :refer [file]]
             [clj-kafka.core :refer [as-properties]]
             [clj-kafka.producer :refer [producer]]
@@ -19,11 +14,6 @@
 (defn tmp-dir
   [& parts]
   (.getPath (apply file (System/getProperty "java.io.tmpdir") "embedded-kafka" parts)))
-
-(def system-time (proxy [Time] []
-                   (milliseconds [] (System/currentTimeMillis))
-                   (nanoseconds [] (System/nanoTime))
-                   (sleep [ms] (Thread/sleep ms))))
 
 (def ^:dynamic kafka-config
   {"broker.id"                   "0"
@@ -42,20 +32,14 @@
 
 (defn create-broker
   []
-  (KafkaServer. (KafkaConfig. (as-properties kafka-config))
-                system-time))
+  (KafkaServerStartable. (KafkaConfig. (as-properties kafka-config))))
 
 (defn create-zookeeper
   []
   (let [tick-time 500
         zk (ZooKeeperServer. (file (tmp-dir "zookeeper-snapshot")) (file (tmp-dir "zookeeper-log")) tick-time)]
-    (doto (NIOServerCnxn$Factory. (InetSocketAddress. "127.0.0.1" (read-string (kafka-config "zookeeper-port"))))
+    (doto (NIOServerCnxn$Factory. (InetSocketAddress. (read-string (kafka-config "zookeeper-port"))))
       (.startup zk))))
-
-(def string-serializer (proxy [ZkSerializer] []
-                         (serialize [data] (.getBytes data "UTF-8"))
-                         (deserialize [bytes] (when bytes
-                                                (String. bytes "UTF-8")))))
 
 (defmacro with-test-broker
   "Creates an in-process broker that can be used to test against"
@@ -67,11 +51,10 @@
              ~consumer-name (consumer kafka-config)]
          (try
            (.startup kafka#)
-           (let [zk-client# (ZkClient. (kafka-config "zookeeper.connect") 500 500 string-serializer)]
-             ~@body)
-           (finally (do (shutdown ~consumer-name)
-                        (.close ~producer-name)
-                        (.shutdown kafka#)
-                        (.awaitShutdown kafka#)
-                        (.shutdown zk#)
-                        (FileUtils/deleteDirectory (file (tmp-dir)))))))))
+           ~@body
+         (finally (do (shutdown ~consumer-name)
+                      (.close ~producer-name)
+                      (.shutdown kafka#)
+                      (.awaitShutdown kafka#)
+                      (.shutdown zk#)
+                      (FileUtils/deleteDirectory (file (tmp-dir)))))))))
