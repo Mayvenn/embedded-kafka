@@ -6,7 +6,7 @@ A library to run an in process Kafka broker (and the necessary Zookeeper).
 
 At Mayvenn we use this library alongside tests that integrate with Kafka without needing the Kafka/Zookeeper to be running separately. The test broker is created in a temp directory that is deleted each time the broker is recreated, making sure to avoid test pollution. Embedding these dependencies also allows these tests to work on CI as well without requiring any extra setup.
 
-This library is a slightly simplified version of what is used in [clj-kafka](https://github.com/pingles/clj-kafka/blob/0.3.2/test/clj_kafka/test/utils.clj) for it to test itself. In the spirit of more end to end tests, we've found it quite useful to add just that part as a development dependency to most of our projects.
+This library is a slightly simplified/extracted version of what is used in [clj-kafka](https://github.com/pingles/clj-kafka/blob/0.3.2/test/clj_kafka/test/utils.clj) for it to test itself. In the spirit of more end to end tests, we've found it quite useful to add just that part as a development dependency to most of our projects.
 
 ## Usage
 
