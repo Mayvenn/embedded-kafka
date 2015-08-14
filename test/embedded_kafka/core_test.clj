@@ -8,6 +8,6 @@
   (with-test-broker producer consumer
     (send-message producer (message "test-topic" "message-content"))
     (is (= "message-content" (-> (messages consumer "test-topic")
-                                 (first)
-                                 (:value)
-                                 (String.))))))
+                                 first
+                                 :value
+                                 String.)))))
