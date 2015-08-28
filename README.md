@@ -25,3 +25,6 @@ The main functions simply create an in-process broker or zookeeper. Most of the 
       :value
       String.)) ;; "message-content"
 ```
+
+## License
+This project is released under EPL, which is viewable [HERE.](LICENSE)
