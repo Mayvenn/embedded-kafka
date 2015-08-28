@@ -1,6 +1,6 @@
 # embedded-kafka
 
-[![Circle CI](https://circleci.com/gh/Mayvenn/embedded-kafka.svg?style=svg)](https://circleci.com/gh/Mayvenn/embedded-kafka)
+[![Circle CI](https://circleci.com/gh/Mayvenn/embedded-kafka.svg)](https://circleci.com/gh/Mayvenn/embedded-kafka)
 
 A library to run an in-process Kafka broker (and the necessary Zookeeper).
 
