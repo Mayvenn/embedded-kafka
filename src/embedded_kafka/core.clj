@@ -4,7 +4,7 @@
   (:import
     [kafka.server KafkaConfig KafkaServerStartable]
     [java.net InetSocketAddress]
-    [org.apache.zookeeper.server ZooKeeperServer NIOServerCnxn$Factory]
+    [org.apache.zookeeper.server ZooKeeperServer NIOServerCnxnFactory]
     [org.apache.commons.io FileUtils])
   (:require [clojure.java.io :refer [file]]
             [clj-kafka.core :refer [as-properties]]
@@ -38,7 +38,8 @@
   []
   (let [tick-time 500
         zk (ZooKeeperServer. (file (tmp-dir "zookeeper-snapshot")) (file (tmp-dir "zookeeper-log")) tick-time)]
-    (doto (NIOServerCnxn$Factory. (InetSocketAddress. (read-string (kafka-config "zookeeper-port"))))
+    (doto (NIOServerCnxnFactory.)
+      (.configure (InetSocketAddress. (read-string (kafka-config "zookeeper-port"))) 4)
       (.startup zk))))
 
 (defmacro with-test-broker
