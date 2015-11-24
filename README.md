@@ -14,7 +14,7 @@ The main functions simply create an in-process broker or zookeeper. Most of the 
 
 ```clj
 (ns ...
-    (:require [embedded-kafka :refer [with-test-broker]]
+    (:require [embedded-kafka.core :refer [with-test-broker]]
               [clj-kafka.producer :refer [send-message message]]
               [clj-kafka.consumer.zk :refer [messages]]))
 
