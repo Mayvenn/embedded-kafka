@@ -39,7 +39,7 @@
   (let [tick-time 500
         zk (ZooKeeperServer. (file (tmp-dir "zookeeper-snapshot")) (file (tmp-dir "zookeeper-log")) tick-time)]
     (doto (NIOServerCnxnFactory.)
-      (.configure (InetSocketAddress. (read-string (kafka-config "zookeeper-port"))) 4)
+      (.configure (InetSocketAddress. (read-string (kafka-config "zookeeper-port"))) 60)
       (.startup zk))))
 
 (defmacro with-test-broker
