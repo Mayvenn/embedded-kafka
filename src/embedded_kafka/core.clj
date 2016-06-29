@@ -27,6 +27,8 @@
    "group.id"                    "consumer"
    "auto.offset.reset"           "smallest"
    "serializer.class"            "kafka.serializer.StringEncoder",
+   "retry.backoff.ms"            "500"
+   "message.send.max.retries"    "5"
    "auto.commit.enable"          "false"
    "log.dir"                     (.getAbsolutePath (file (tmp-dir "kafka-log")))})
 
