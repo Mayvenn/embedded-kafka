@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [commons-io/commons-io "2.4"]
                  [clj-kafka "0.3.2"]]
+  :deploy-repositories [["releases" :clojars]]
   :profiles
   {:dev {:source-paths ["dev"]
          :dependencies [[pjstadig/humane-test-output "0.6.0"]
