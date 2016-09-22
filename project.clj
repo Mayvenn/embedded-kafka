@@ -3,7 +3,7 @@
   :url "https://github.com/Mayvenn/embedded-kafka"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
                  [commons-io/commons-io "2.4"]
                  [clj-kafka "0.3.2"]]
   :deploy-repositories [["releases" :clojars]]
