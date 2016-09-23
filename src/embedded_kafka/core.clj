@@ -22,7 +22,6 @@
   {"broker.id"                   "0"
    "listeners"                   "PLAINTEXT://localhost:9999"
    "bootstrap.servers"           "localhost:9999"
-   "controlled.shutdown.enable"  "false"
    "zookeeper.connect"           "127.0.0.1:2182"
    "zookeeper-port"              "2182"
    "log.flush.interval.messages" "1"
