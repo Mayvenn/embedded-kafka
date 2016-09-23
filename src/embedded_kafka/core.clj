@@ -5,39 +5,40 @@
     [kafka.server KafkaConfig KafkaServerStartable]
     [java.net InetSocketAddress]
     [org.apache.zookeeper.server ZooKeeperServer NIOServerCnxnFactory]
-    [org.apache.commons.io FileUtils])
+    [org.apache.commons.io FileUtils]
+    [java.util Properties])
   (:require [clojure.java.io :refer [file]]
-            [clj-kafka.core :refer [as-properties]]
-            [clj-kafka.producer :refer [producer]]
-            [clj-kafka.consumer.zk :refer [consumer shutdown]]))
+            [gregor.core :as gregor]))
 
-(defn tmp-dir
-  [& parts]
+(defn as-properties [m]
+  (let [ps (Properties.)]
+    (doseq [[k v] m] (.setProperty ps k v))
+    ps))
+
+(defn tmp-dir [& parts]
   (.getPath (apply file (System/getProperty "java.io.tmpdir") "embedded-kafka" parts)))
 
 (def ^:dynamic kafka-config
   {"broker.id"                   "0"
-   "port"                        "9999"
-   "host.name"                   "localhost"
-   "metadata.broker.list"        "localhost:9999"
+   "listeners"                   "PLAINTEXT://localhost:9999"
+   "bootstrap.servers"           "localhost:9999"
+   "controlled.shutdown.enable"  "false"
    "zookeeper.connect"           "127.0.0.1:2182"
    "zookeeper-port"              "2182"
    "log.flush.interval.messages" "1"
    "auto.create.topics.enable"   "true"
    "group.id"                    "consumer"
-   "auto.offset.reset"           "smallest"
-   "serializer.class"            "kafka.serializer.StringEncoder",
+   "auto.offset.reset"           "earliest"
    "retry.backoff.ms"            "500"
    "message.send.max.retries"    "5"
    "auto.commit.enable"          "false"
+   "max.poll.records"            "1"
    "log.dir"                     (.getAbsolutePath (file (tmp-dir "kafka-log")))})
 
-(defn create-broker
-  []
+(defn create-broker []
   (KafkaServerStartable. (KafkaConfig. (as-properties kafka-config))))
 
-(defn create-zookeeper
-  []
+(defn create-zookeeper []
   (let [tick-time 500
         zk (ZooKeeperServer. (file (tmp-dir "zookeeper-snapshot")) (file (tmp-dir "zookeeper-log")) tick-time)]
     (doto (NIOServerCnxnFactory.)
@@ -49,15 +50,20 @@
   [producer-name consumer-name & body]
   `(do (FileUtils/deleteDirectory (file (tmp-dir)))
        (let [zk# (create-zookeeper)
-             kafka# (create-broker)
-             ~producer-name (producer kafka-config)
-             ~consumer-name (consumer kafka-config)]
+             kafka# (create-broker)]
          (try
            (.startup kafka#)
-           ~@body
-         (finally (do (shutdown ~consumer-name)
-                      (.close ~producer-name)
-                      (.shutdown kafka#)
+           (let [~producer-name (gregor/producer (get kafka-config "bootstrap.servers") kafka-config) 
+                 ~consumer-name (gregor/consumer (get kafka-config "bootstrap.servers")
+                                                 (get kafka-config "group.id")
+                                                 []
+                                                 kafka-config)]
+             (try
+               ~@body
+               (finally
+                 (do (gregor/close ~consumer-name)
+                     (gregor/close ~producer-name)))))
+         (finally (do (.shutdown kafka#)
                       (.awaitShutdown kafka#)
                       (.shutdown zk#)
                       (FileUtils/deleteDirectory (file (tmp-dir)))))))))
