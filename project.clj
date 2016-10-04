@@ -1,4 +1,4 @@
-(defproject embedded-kafka "0.3.3"
+(defproject embedded-kafka "0.3.4-SNAPSHOT"
   :description "Helpers to run an embedded Kafka Broker"
   :url "https://github.com/Mayvenn/embedded-kafka"
   :license {:name "Eclipse Public License"
