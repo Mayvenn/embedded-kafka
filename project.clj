@@ -9,7 +9,7 @@
   :deploy-repositories [["releases" :clojars]]
   :profiles
   {:dev {:source-paths ["dev"]
-         :dependencies [[diff-eq "0.2.2"]
+         :dependencies [[diff-eq "0.2.5"]
                         [org.clojure/tools.namespace "0.2.9"]]
          :plugins [[lein-cljfmt "0.3.0"]]
          :injections [(require 'diff-eq.core)
