@@ -19,20 +19,21 @@
   (.getPath (apply file (System/getProperty "java.io.tmpdir") "embedded-kafka" parts)))
 
 (def ^:dynamic kafka-config
-  {"broker.id"                   "0"
-   "listeners"                   "PLAINTEXT://localhost:9999"
-   "bootstrap.servers"           "localhost:9999"
-   "zookeeper.connect"           "127.0.0.1:2182"
-   "zookeeper-port"              "2182"
-   "log.flush.interval.messages" "1"
-   "auto.create.topics.enable"   "true"
-   "group.id"                    "consumer"
-   "auto.offset.reset"           "earliest"
-   "retry.backoff.ms"            "500"
-   "message.send.max.retries"    "5"
-   "auto.commit.enable"          "false"
-   "max.poll.records"            "1"
-   "log.dir"                     (.getAbsolutePath (file (tmp-dir "kafka-log")))})
+  {"broker.id"                        "0"
+   "listeners"                        "PLAINTEXT://localhost:9999"
+   "bootstrap.servers"                "localhost:9999"
+   "zookeeper.connect"                "127.0.0.1:2182"
+   "zookeeper-port"                   "2182"
+   "log.flush.interval.messages"      "1"
+   "auto.create.topics.enable"        "true"
+   "group.id"                         "consumer"
+   "auto.offset.reset"                "earliest"
+   "retry.backoff.ms"                 "500"
+   "message.send.max.retries"         "5"
+   "auto.commit.enable"               "false"
+   "max.poll.records"                 "1"
+   "offsets.topic.replication.factor" "1"
+   "log.dir"                          (.getAbsolutePath (file (tmp-dir "kafka-log")))})
 
 (defn create-broker []
   (KafkaServerStartable. (KafkaConfig. (as-properties kafka-config))))

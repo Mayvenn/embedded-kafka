@@ -3,9 +3,10 @@
   :url "https://github.com/Mayvenn/embedded-kafka"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [commons-io/commons-io "2.4"]
-                 [io.weft/gregor "0.5.1"]]
+                 [io.weft/gregor "0.6.0"]
+                 [org.apache.kafka/kafka_2.11 "0.11.0.1"]]
   :deploy-repositories [["releases" :clojars]]
   :profiles
   {:dev {:source-paths ["dev"]
