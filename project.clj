@@ -6,7 +6,7 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [commons-io/commons-io "2.4"]
                  [io.weft/gregor "0.6.0"]
-                 [org.apache.kafka/kafka_2.11 "0.11.0.1"]]
+                 [org.apache.kafka/kafka_2.11 "1.0.0"]]
   :deploy-repositories [["releases" :clojars]]
   :profiles
   {:dev {:source-paths ["dev"]
