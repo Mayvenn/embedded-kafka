@@ -14,16 +14,18 @@ The main functions simply create an in-process broker or zookeeper. Most of the 
 
 ```clj
 (ns ...
-    (:require [embedded-kafka.core :refer [with-test-broker]]
-              [clj-kafka.producer :refer [send-message message]]
-              [clj-kafka.consumer.zk :refer [messages]]))
+  (:require [embedded-kafka.core :refer [with-test-broker]]
+            [gregor.core :as gregor]))
 
 (with-test-broker producer consumer
-  (send-message producer (message "test-topic" "message-content"))
-  (-> (messages consumer "test-topic")
-      first
-      :value
-      String.)) ;; "message-content"
+  (gregor/subscribe consumer ["test-topic"])
+  (gregor/create-topic {:connection-string "127.0.0.1:2182"} "test-topic" {})
+  (.get (gregor/send producer "test-topic" "message-content"))
+  (->> (gregor/poll consumer 15000)
+       (take 1)
+       first
+       :value
+       String.)) ;; "message-content"
 ```
 
 ## License
