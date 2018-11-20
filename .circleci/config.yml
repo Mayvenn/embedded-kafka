@@ -1,0 +1,19 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/clojure:lein-2.7.1
+    environment:
+      LEIN_ROOT: nbd
+      JVM_OPTS: -Xmx320m
+    steps:
+      - checkout
+      - restore_cache: # restores saved cache if checksum hasn't changed since the last run
+          key: embedded-kafka--clojure-{{ checksum "project.clj" }}
+      - run: lein deps
+      - save_cache: # generate and store cache in the .m2 directory using a key template
+          paths:
+            - ~/.m2
+          key: embedded-kafka--clojure-{{ checksum "project.clj" }}
+      - run: lein do test
